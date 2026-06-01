@@ -1514,9 +1514,10 @@ template <class ELFT> void Writer<ELFT>::finalizeAddressDependentContent() {
   // the final addresses are unavailable.
   uint32_t pass = 0, assignPasses = 0;
   while (!ctx.arg.relocatable) {
-    bool changed = ctx.target->needsThunks
-                       ? tc.createThunks(pass, ctx.outputSections)
-                       : ctx.target->relaxOnce(pass);
+    bool changed = false;
+    if (ctx.target->needsThunks)
+      changed |= tc.createThunks(pass, ctx.outputSections);
+    changed |= ctx.target->relaxOnce(pass);
     bool spilled = ctx.script->spillSections();
     changed |= spilled;
     ++pass;
