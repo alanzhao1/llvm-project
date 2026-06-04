@@ -1591,6 +1591,7 @@ void X86_64Thunk::writeTo(uint8_t *buf) {
   buf[1] = 0x25;
   uint64_t s = destination.getGotVA(ctx);
   uint64_t p = getThunkTargetSym()->getVA(ctx);
+  assert(getThunkTargetSym()->isInGot(ctx));
   write32(ctx, buf + 2, s - p - 6);
 }
 
