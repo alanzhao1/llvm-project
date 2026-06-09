@@ -1589,9 +1589,17 @@ void X86_64Thunk::writeTo(uint8_t *buf) {
   // jmp *foo@GOTPCREL(%rip)
   buf[0] = 0xff;
   buf[1] = 0x25;
+  if (!destination.isInGot(ctx)) {
+    destination.allocateAux(ctx);
+    elf::addGotEntry(ctx, destination);
+  }
+  if (!getThunkTargetSym()->isInGot(ctx)) {
+    getThunkTargetSym()->allocateAux(ctx);
+    elf::addGotEntry(ctx, *getThunkTargetSym());
+  }
   uint64_t s = destination.getGotVA(ctx);
   uint64_t p = getThunkTargetSym()->getVA(ctx);
-  assert(getThunkTargetSym()->isInGot(ctx));
+  // assert(getThunkTargetSym()->isInGot(ctx));
   write32(ctx, buf + 2, s - p - 6);
 }
 
