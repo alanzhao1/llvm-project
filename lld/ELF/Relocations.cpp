@@ -1636,6 +1636,18 @@ ThunkSection *ThunkCreator::getISDThunkSec(OutputSection *os,
                                            InputSectionDescription *isd,
                                            const Relocation &rel,
                                            uint64_t src) {
+  if (ctx.arg.emachine == EM_X86_64 && ctx.in.plt && ctx.in.plt->getParent()) {
+    os = ctx.in.plt->getParent();
+    InputSectionDescription *lastIsd = nullptr;
+    for (SectionCommand *bc : os->commands) {
+      if (auto *i = dyn_cast<InputSectionDescription>(bc))
+        if (!i->sections.empty())
+          lastIsd = i;
+    }
+    if (lastIsd)
+      isd = lastIsd;
+  }
+
   // See the comment in getThunk for -pcBias below.
   const int64_t pcBias = getPCBias(ctx, *isec, rel);
   for (std::pair<ThunkSection *, uint32_t> tp : isd->thunkSections) {
@@ -1653,8 +1665,11 @@ ThunkSection *ThunkCreator::getISDThunkSec(OutputSection *os,
   // possible. Error if InputSection is so large we cannot place ThunkSection
   // anywhere in Range.
   uint64_t thunkSecOff = isec->outSecOff;
-  if (!ctx.target->inBranchRange(rel.type, src,
-                                 os->addr + thunkSecOff + rel.addend)) {
+  if (ctx.arg.emachine == EM_X86_64) {
+    thunkSecOff =
+        isd->sections.back()->outSecOff + isd->sections.back()->getSize();
+  } else if (!ctx.target->inBranchRange(rel.type, src,
+                                        os->addr + thunkSecOff + rel.addend)) {
     thunkSecOff = isec->outSecOff + isec->getSize();
     if (!ctx.target->inBranchRange(rel.type, src,
                                    os->addr + thunkSecOff + rel.addend))
@@ -1674,6 +1689,24 @@ ThunkSection *ThunkCreator::getISThunkSec(InputSection *isec) {
   // Find InputSectionRange within Target Output Section (TOS) that the
   // InputSection (IS) that we need to precede is in.
   OutputSection *tos = isec->getParent();
+
+  if (ctx.arg.emachine == EM_X86_64 && ctx.in.plt && ctx.in.plt->getParent()) {
+    tos = ctx.in.plt->getParent();
+    InputSectionDescription *lastIsd = nullptr;
+    for (SectionCommand *bc : tos->commands) {
+      if (auto *isd = dyn_cast<InputSectionDescription>(bc))
+        if (!isd->sections.empty())
+          lastIsd = isd;
+    }
+    if (lastIsd) {
+      uint64_t off = lastIsd->sections.back()->outSecOff +
+                     lastIsd->sections.back()->getSize();
+      ts = addThunkSection(tos, lastIsd, off, false);
+      thunkedSections[isec] = ts;
+      return ts;
+    }
+  }
+
   for (SectionCommand *bc : tos->commands) {
     auto *isd = dyn_cast<InputSectionDescription>(bc);
     if (!isd || isd->sections.empty())

@@ -501,8 +501,7 @@ GotSection::GotSection(Ctx &ctx)
 }
 
 void GotSection::addEntry(const Symbol &sym) {
-  assert(sym.auxIdx == ctx.symAux.size() - 1);
-  ctx.symAux.back().gotIdx = numEntries++;
+  ctx.symAux[sym.auxIdx].gotIdx = numEntries++;
 }
 
 void GotSection::addAuthEntry(const Symbol &sym) {
@@ -568,7 +567,8 @@ void GotSection::finalizeContents() {
 bool GotSection::isNeeded() const {
   // Needed if the GOT symbol is used or the number of entries is more than just
   // the header. A GOT with just the header may not be needed.
-  return hasGotOffRel || numEntries > ctx.target->gotHeaderEntriesNum;
+  return hasGotOffRel || numEntries > ctx.target->gotHeaderEntriesNum ||
+         (ctx.arg.emachine == EM_X86_64 && ctx.target->needsThunks);
 }
 
 void GotSection::writeTo(uint8_t *buf) {
@@ -2429,8 +2429,9 @@ size_t PltSection::getSize() const {
 }
 
 bool PltSection::isNeeded() const {
-  // For -z retpolineplt, .iplt needs the .plt header.
-  return !entries.empty() || (ctx.arg.zRetpolineplt && ctx.in.iplt->isNeeded());
+  return !entries.empty() ||
+         (ctx.arg.zRetpolineplt && ctx.in.iplt->isNeeded()) ||
+         (ctx.arg.emachine == EM_X86_64 && ctx.target->needsThunks);
 }
 
 // Used by ARM to add mapping symbols in the PLT section, which aid
@@ -4056,8 +4057,9 @@ bool ARMExidxSyntheticSection::isNeeded() const {
 }
 
 ThunkSection::ThunkSection(Ctx &ctx, OutputSection *os, uint64_t off)
-    : SyntheticSection(ctx, ".text.thunk", SHT_PROGBITS,
-                       SHF_ALLOC | SHF_EXECINSTR,
+    : SyntheticSection(ctx,
+                       ctx.arg.emachine == EM_X86_64 ? ".plt" : ".text.thunk",
+                       SHT_PROGBITS, SHF_ALLOC | SHF_EXECINSTR,
                        ctx.arg.emachine == EM_PPC64 ? 16 : 4) {
   this->parent = os;
   this->outSecOff = off;

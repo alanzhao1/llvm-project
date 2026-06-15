@@ -1589,25 +1589,17 @@ void X86_64Thunk::writeTo(uint8_t *buf) {
   // jmp *foo@GOTPCREL(%rip)
   buf[0] = 0xff;
   buf[1] = 0x25;
-  if (!destination.isInGot(ctx)) {
-    destination.allocateAux(ctx);
-    elf::addGotEntry(ctx, destination);
-  }
-  if (!getThunkTargetSym()->isInGot(ctx)) {
-    getThunkTargetSym()->allocateAux(ctx);
-    elf::addGotEntry(ctx, *getThunkTargetSym());
-  }
   uint64_t s = destination.getGotVA(ctx);
   uint64_t p = getThunkTargetSym()->getVA(ctx);
-  // assert(getThunkTargetSym()->isInGot(ctx));
   write32(ctx, buf + 2, s - p - 6);
 }
 
 void X86_64Thunk::addSymbols(ThunkSection &isec) {
   addSymbol(ctx.saver.save("__X86_64Thunk_" + destination.getName()), STT_FUNC,
             0, isec);
-  if (destination.auxIdx == 0) {
-    destination.allocateAux(ctx);
+  if (!destination.isInGot(ctx)) {
+    if (destination.auxIdx == 0)
+      destination.allocateAux(ctx);
     elf::addGotEntry(ctx, destination);
   }
 }
