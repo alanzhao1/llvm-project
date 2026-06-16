@@ -539,10 +539,7 @@ public:
         {dynType, &sec, offsetInSec, isAgainstSymbol, sym, addend, expr},
         shard);
   }
-  bool isNeeded() const override {
-    return !relocs.empty() || !relativeRelocs.empty() ||
-           llvm::any_of(relocsVec, [](auto &v) { return !v.empty(); });
-  }
+  bool isNeeded() const override;
   size_t getSize() const override {
     size_t count = relocs.size() + relativeRelocs.size();
     for (const auto &v : relocsVec)
