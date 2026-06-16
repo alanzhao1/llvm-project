@@ -1473,6 +1473,14 @@ RelocationBaseSection::RelocationBaseSection(Ctx &ctx, StringRef name,
       relocsVec(concurrency), relativeRel(ctx.target->relativeRel),
       combreloc(combreloc) {}
 
+bool RelocationBaseSection::isNeeded() const {
+  return !relocs.empty() || !relativeRelocs.empty() ||
+         llvm::any_of(relocsVec, [](auto &v) { return !v.empty(); }) ||
+         (ctx.arg.emachine == EM_X86_64 && ctx.target->needsThunks &&
+          this == ctx.in.relaDyn.get());
+}
+
+
 void RelocationBaseSection::addSymbolReloc(
     RelType dynType, InputSectionBase &isec, uint64_t offsetInSec, Symbol &sym,
     int64_t addend, std::optional<RelType> addendRelType) {
