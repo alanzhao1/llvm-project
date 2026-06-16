@@ -4,7 +4,13 @@
 # RUN: llvm-objdump -d %t | FileCheck %s
 # RUN: llvm-readobj -S %t | FileCheck --check-prefix=SEC %s
 
+# RUN: ld.lld -pie %t.o -o %t.pie
+# RUN: llvm-objdump -d %t.pie | FileCheck %s
+# RUN: llvm-readelf -r %t.pie | FileCheck --check-prefix=PIE %s
+
 # SEC: Name: .got
+
+# PIE: R_X86_64_RELATIVE
 
 # CHECK-LABEL: <high>:
 # CHECK-NEXT: [[#%x, HIGH:]]: c3                            retq
