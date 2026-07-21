@@ -553,7 +553,6 @@ bool X86_64::relaxOnce(int pass) const {
         uint64_t v = sec->getRelocTargetVA(ctx, rel1,
                                            sec->getOutputSection()->addr +
                                                sec->outSecOff + rel.offset);
-        llvm::dbgs() << "relaxOnce check " << rel.sym->getName() << " pass=" << pass << " v=" << v << " isInt=" << isInt<32>(v) << "\n";
         if (isInt<32>(v))
           continue;
         if (rel.sym->auxIdx == 0) {
