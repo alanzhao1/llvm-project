@@ -8,9 +8,16 @@
 # RUN: llvm-objdump -d %t.pie | FileCheck %s
 # RUN: llvm-readelf -r %t.pie | FileCheck --check-prefix=PIE %s
 
+# RUN: ld.lld -pie --pack-dyn-relocs=relr %t.o -o %t.pie.relr
+# RUN: llvm-objdump -d %t.pie.relr | FileCheck %s
+# RUN: llvm-readelf -r %t.pie.relr | FileCheck --check-prefix=PIE-RELR %s
+
 # SEC: Name: .got
 
 # PIE: R_X86_64_RELATIVE
+
+# PIE-RELR: Relocation section '.relr.dyn'
+# PIE-RELR: 0000000080002338 0000000080002338 _DYNAMIC + 0xf0
 
 # CHECK-LABEL: <high>:
 # CHECK-NEXT: [[#%x, HIGH:]]: c3                            retq
