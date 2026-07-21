@@ -1603,14 +1603,22 @@ RelrBaseSection::RelrBaseSection(Ctx &ctx, unsigned concurrency,
           SHF_ALLOC, ctx.arg.wordsize),
       relocsVec(concurrency) {}
 
+bool RelrBaseSection::isNeeded() const {
+  return !relocs.empty() ||
+         llvm::any_of(relocsVec, [](auto &v) { return !v.empty(); }) ||
+         (ctx.arg.emachine == EM_X86_64 && ctx.target->needsThunks &&
+          this == ctx.in.relrDyn.get());
+}
+
 void RelrBaseSection::mergeRels() {
   size_t newSize = relocs.size();
   for (const auto &v : relocsVec)
     newSize += v.size();
   relocs.reserve(newSize);
-  for (const auto &v : relocsVec)
+  for (auto &v : relocsVec)
     llvm::append_range(relocs, v);
-  relocsVec.clear();
+  for (auto &v : relocsVec)
+    v.clear();
 }
 
 void RelrBaseSection::finalizeContents() { mergeRels(); }
@@ -1873,6 +1881,7 @@ RelrSection<ELFT>::RelrSection(Ctx &ctx, unsigned concurrency,
 }
 
 template <class ELFT> bool RelrSection<ELFT>::updateAllocSize(Ctx &ctx) {
+  mergeRels();
   // This function computes the contents of an SHT_RELR packed relocation
   // section.
   //

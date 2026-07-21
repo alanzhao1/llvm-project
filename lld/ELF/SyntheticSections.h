@@ -613,10 +613,7 @@ public:
     isec.addReloc({expr, addendRelType, offsetInSec, addend, &sym});
     relocsVec[shard].push_back({&isec, isec.relocs().size() - 1});
   }
-  bool isNeeded() const override {
-    return !relocs.empty() ||
-           llvm::any_of(relocsVec, [](auto &v) { return !v.empty(); });
-  }
+  bool isNeeded() const override;
   void finalizeContents() override;
   SmallVector<RelativeReloc, 0> relocs;
 
