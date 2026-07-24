@@ -4110,9 +4110,8 @@ bool ARMExidxSyntheticSection::isNeeded() const {
 }
 
 ThunkSection::ThunkSection(Ctx &ctx, OutputSection *os, uint64_t off)
-    : SyntheticSection(ctx,
-                       ctx.arg.emachine == EM_X86_64 ? ".plt" : ".text.thunk",
-                       SHT_PROGBITS, SHF_ALLOC | SHF_EXECINSTR,
+    : SyntheticSection(ctx, ".text.thunk", SHT_PROGBITS,
+                       SHF_ALLOC | SHF_EXECINSTR,
                        ctx.arg.emachine == EM_PPC64 ? 16 : 4) {
   this->parent = os;
   this->outSecOff = off;
