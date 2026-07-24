@@ -2482,8 +2482,8 @@ size_t PltSection::getSize() const {
 }
 
 bool PltSection::isNeeded() const {
-  return !entries.empty() ||
-         (ctx.arg.zRetpolineplt && ctx.in.iplt->isNeeded());
+  // For -z retpolineplt, .iplt needs the .plt header.
+  return !entries.empty() || (ctx.arg.zRetpolineplt && ctx.in.iplt->isNeeded());
 }
 
 // Used by ARM to add mapping symbols in the PLT section, which aid
