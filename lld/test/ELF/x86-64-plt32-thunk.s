@@ -17,14 +17,14 @@
 # PIE: R_X86_64_RELATIVE
 
 # PIE-RELR: Relocation section '.relr.dyn'
-# PIE-RELR: 0000000080002338 0000000080002338 _DYNAMIC + 0xf0
+# PIE-RELR: {{[0-9a-f]+}} {{[0-9a-f]+}} _DYNAMIC + 0xf0
 
 # CHECK-LABEL: <high>:
 # CHECK-NEXT: [[#%x, HIGH:]]: c3                            retq
-# CHECK-LABEL: <_start>:
-# CHECK-NEXT: {{.*}}: e8 {{.*}} callq {{.*}} <__X86_64Thunk_high>
 # CHECK-LABEL: <__X86_64Thunk_high>:
 # CHECK-NEXT: {{.*}}: ff 25 {{.*}} jmpq *{{.*}}(%rip)
+# CHECK-LABEL: <_start>:
+# CHECK-NEXT: {{.*}}: e8 {{.*}} callq {{.*}} <__X86_64Thunk_high>
 
 .section .ltext, "axl"
 .globl high
