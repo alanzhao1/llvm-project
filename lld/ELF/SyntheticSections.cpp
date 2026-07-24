@@ -2483,8 +2483,7 @@ size_t PltSection::getSize() const {
 
 bool PltSection::isNeeded() const {
   return !entries.empty() ||
-         (ctx.arg.zRetpolineplt && ctx.in.iplt->isNeeded()) ||
-         (ctx.arg.emachine == EM_X86_64 && ctx.target->needsThunks);
+         (ctx.arg.zRetpolineplt && ctx.in.iplt->isNeeded());
 }
 
 // Used by ARM to add mapping symbols in the PLT section, which aid
